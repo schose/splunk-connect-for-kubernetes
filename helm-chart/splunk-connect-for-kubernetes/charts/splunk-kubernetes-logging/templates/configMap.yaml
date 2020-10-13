@@ -188,10 +188,10 @@ data:
         @type concat
         key log
         timeout_label @SPLUNK
-        stream_identity_key stream
+        #stream_identity_key stream
         multiline_start_regexp {{ $logDef.multiline.firstline }}
         flush_interval {{ $logDef.multiline.flushInterval | default 5 }}
-        separator {{ $logDef.multiline.separator | default "" | quote }}
+        separator {{ $logDef.multiline.separator | default "\n" | quote }}
         use_first_timestamp true
       </filter>
       {{- end }}
