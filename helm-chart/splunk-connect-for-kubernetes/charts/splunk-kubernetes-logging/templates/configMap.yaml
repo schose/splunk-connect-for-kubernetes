@@ -85,7 +85,6 @@ data:
       <parse>
       {{- if eq .Values.containers.logFormatType "cri" }}
         @type regexp
-        #expression /^(?<time>.+) (?<stream>stdout|stderr) [^ ]* (?<log>.*)$/
         expression /^(?<time>.+) (?<stream>stdout|stderr) (?<partial_flag>[FP]) (?<log>.+)$/
         time_format  {{ .Values.containers.logFormat | default "%Y-%m-%dT%H:%M:%S.%N%:z" }}
       {{- else if eq .Values.containers.logFormatType "json" }}
@@ -115,6 +114,7 @@ data:
       read_from_head true
       path_key source
       {{- if $logDef.multiline }}
+
       multiline_flush_interval {{ $logDef.multiline.flushInterval | default "5s" }}
       {{- end }}
       <parse>
