@@ -189,7 +189,7 @@ data:
         @type concat
         key log
         timeout_label @SPLUNK
-        #stream_identity_key stream
+        stream_identity_key stream
         {{- if $logDef.multiline.partiallines }}
         partial_key partial_flag
         partial_value P
