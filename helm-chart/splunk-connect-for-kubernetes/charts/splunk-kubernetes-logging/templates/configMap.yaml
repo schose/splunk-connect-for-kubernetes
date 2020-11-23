@@ -87,8 +87,6 @@ data:
         @type regexp
         #expression /^(?<time>.+) (?<stream>stdout|stderr) [^ ]* (?<log>.*)$/
         expression /^(?<time>.+) (?<stream>stdout|stderr) (?<partial_flag>[FP]) (?<log>.+)$/
-
-
         time_format  {{ .Values.containers.logFormat | default "%Y-%m-%dT%H:%M:%S.%N%:z" }}
       {{- else if eq .Values.containers.logFormatType "json" }}
         @type json
