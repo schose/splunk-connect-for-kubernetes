@@ -49,6 +49,7 @@ spec:
       - name: splunk-fluentd-k8s-metrics
         image: {{ template "splunk-kubernetes-metrics.image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        # if /tmp/fluentd-buffer is not there for 5 minutes
         livenessProbe:
           initialDelaySeconds: 60
           periodSeconds: 60
@@ -56,24 +57,15 @@ spec:
             command:
             - '/bin/sh'
             - '-c'
-            - >
-              LIVENESS_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-300};
-              STUCK_THRESHOLD_SECONDS=${STUCK_THRESHOLD_SECONDS:-900};
-              if [ ! -e /tmp/fluentd-buffers ];
+            - |
+              if test -z `find /tmp/fluentd-buffer -mmin +5`
               then
-                exit 1;
-              fi;
-              touch -d "${STUCK_THRESHOLD_SECONDS} seconds ago" /tmp/marker-stuck;
-              if [ -z "$(find /tmp/fluentd-buffers -type d -newer /tmp/marker-stuck -print -quit)" ];
-              then
-                rm -rf /var/log/fluentd-buffers;
-                exit 1;
-              fi;
-              touch -d "${LIVENESS_THRESHOLD_SECONDS} seconds ago" /tmp/marker-liveness;
-              if [ -z "$(find /tmp/fluentd-buffers -type d -newer /tmp/marker-liveness -print -quit)" ];
-              then
-                exit 1;
-              fi;
+                echo "liveness ok $?"
+                exit 0
+              else
+                echo "liveness failed $?"
+                exit 1
+              fi
         env:
           - name: KUBERNETES_NODE_IP
             valueFrom:
