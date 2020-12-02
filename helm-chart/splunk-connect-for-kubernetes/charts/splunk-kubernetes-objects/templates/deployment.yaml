@@ -66,6 +66,8 @@ spec:
               secretKeyRef:
                 name: {{ template "splunk-kubernetes-objects.secret" . }}
                 key: splunk_hec_token
+          - name: SSL_CERT_FILE
+            value: /fluentd/etc/splunk/hec_ca_file
         livenessProbe:
           exec:
             command:
