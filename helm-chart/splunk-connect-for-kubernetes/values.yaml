@@ -79,6 +79,13 @@ splunk-kubernetes-logging:
     logFormat:
     # Specify the interval of refreshing the list of watch file. 
     refreshInterval:
+  
+  # Kubernetes probes config https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  livenessProbe:
+    initialDelaySeconds: 30 # wait x seconds before the first check
+    periodSeconds: 60 # check every x seconds
+    timeoutSeconds: 55 # wait x seconds for a response before a single check is failed
+    failureThreshold: 5 # kill the pod after x failed checks
 
   # Enriches log record with kubernetes data
   k8sMetadata:
@@ -499,6 +506,13 @@ splunk-kubernetes-objects:
     clusterName:
     # Add privileged access to containers for openshift compatability
     openshift: false
+  
+  # Kubernetes probes config https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  livenessProbe:
+    initialDelaySeconds: 30 # wait x seconds before the first check
+    periodSeconds: 60 # check every x seconds
+    timeoutSeconds: 55 # wait x seconds for a response before a single check is failed
+    failureThreshold: 5 # kill the pod after x failed checks
 
   # = Object Lists =
   # NOTE: at least one object must be provided.
@@ -810,6 +824,13 @@ splunk-kubernetes-metrics:
     usePullSecret: false
     # The name of the pull secret to attach to the respective serviceaccount used to pull the image
     pullsecretName:
+  
+  # Kubernetes probes config https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  livenessProbe:
+    initialDelaySeconds: 30 # wait x seconds before the first check
+    periodSeconds: 60 # check every x seconds
+    timeoutSeconds: 55 # wait x seconds for a response before a single check is failed
+    failureThreshold: 5 # kill the pod after x failed checks
 
   # Controls the resources used by the fluentd daemonset
   resources:

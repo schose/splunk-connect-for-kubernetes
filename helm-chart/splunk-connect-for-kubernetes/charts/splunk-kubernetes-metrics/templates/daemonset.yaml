@@ -27,6 +27,7 @@ spec:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         checksum/config: {{ include (print $.Template.BasePath "/configMap.yaml") . | sha256sum }}
+        checksum/k8sProbes: {{ include (print $.Template.BasePath "/configmap-k8sProbes.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ template "splunk-kubernetes-metrics.serviceAccountName" . }}
       {{- with .Values.nodeSelector }}
@@ -49,31 +50,6 @@ spec:
       - name: splunk-fluentd-k8s-metrics
         image: {{ template "splunk-kubernetes-metrics.image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        livenessProbe:
-          initialDelaySeconds: 60
-          periodSeconds: 60
-          exec:
-            command:
-            - '/bin/sh'
-            - '-c'
-            - >
-              LIVENESS_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-300};
-              STUCK_THRESHOLD_SECONDS=${STUCK_THRESHOLD_SECONDS:-900};
-              if [ ! -e /tmp/fluentd-buffers ];
-              then
-                exit 1;
-              fi;
-              touch -d "${STUCK_THRESHOLD_SECONDS} seconds ago" /tmp/marker-stuck;
-              if [ -z "$(find /tmp/fluentd-buffers -type d -newer /tmp/marker-stuck -print -quit)" ];
-              then
-                rm -rf /var/log/fluentd-buffers;
-                exit 1;
-              fi;
-              touch -d "${LIVENESS_THRESHOLD_SECONDS} seconds ago" /tmp/marker-liveness;
-              if [ -z "$(find /tmp/fluentd-buffers -type d -newer /tmp/marker-liveness -print -quit)" ];
-              then
-                exit 1;
-              fi;
         env:
           - name: KUBERNETES_NODE_IP
             valueFrom:
@@ -88,6 +64,23 @@ spec:
               secretKeyRef:
                 name: {{ template "splunk-kubernetes-metrics.secret" . }}
                 key: splunk_hec_token
+        livenessProbe:
+          exec:
+            command:
+            - "/bin/sh"
+            - "-c"
+            - "/fluentd/liveness.sh"
+          {{- if .Values.global.splunk-kubernetes-metrics.livenessProbe }}
+          {{ if .Values.global.splunk-kubernetes-metrics.livenessProbe.initialDelaySeconds }} {{- (printf "initialDelaySeconds: %d" (int64 .Values.global.splunk-kubernetes-metrics.livenessProbe.initialDelaySeconds)) }} {{ else }}initialDelaySeconds: 30 {{end}}
+          {{ if .Values.global.splunk-kubernetes-metrics.livenessProbe.periodSeconds }} {{- (printf "periodSeconds: %d" (int64 .Values.global.splunk-kubernetes-metrics.livenessProbe.periodSeconds)) }} {{ else }}periodSeconds: 60 {{end}}
+          {{ if .Values.global.splunk-kubernetes-metrics.livenessProbe.timeoutSeconds }} {{- (printf "timeoutSeconds: %d" (int64 .Values.global.splunk-kubernetes-metrics.livenessProbe.timeoutSeconds)) }} {{ else }}timeoutSeconds: 55 {{end}}
+          {{ if .Values.global.splunk-kubernetes-metrics.livenessProbe.failureThreshold }} {{- (printf "failureThreshold: %d" (int64 .Values.global.splunk-kubernetes-metrics.livenessProbe.failureThreshold)) }} {{ else }}failureThreshold: 5 {{end}}
+          {{- else }}
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 55
+          failureThreshold: 5
+          {{- end }}
         resources:
 {{ toYaml .Values.resources.fluent | indent 12 }}
         volumeMounts:
@@ -96,6 +89,9 @@ spec:
           - name: secrets
             mountPath: /fluentd/etc/splunk
             readOnly: true
+          - name: configmap-k8Probes
+            mountPath: /fluentd/liveness.sh
+            subPath: liveness.sh
       volumes:
       - name: conf-configmap
         configMap:
@@ -103,6 +99,10 @@ spec:
       - name: secrets
         secret:
           secretName: {{ template "splunk-kubernetes-metrics.secret" . }}
+      - name: configmap-k8Probes
+        configMap:
+          name: {{ template "splunk-kubernetes-metrics.fullname" . }}-k8sProbes
+          defaultMode: 0755
       {{- if .Values.priorityClassName }}
       priorityClassName: {{ .Values.priorityClassName }}
       {{- end }}

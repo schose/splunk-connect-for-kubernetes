@@ -22,6 +22,7 @@ spec:
         release: {{ .Release.Name }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configMap.yaml") . | sha256sum }}
+        checksum/k8sProbes: {{ include (print $.Template.BasePath "/configmap-k8sProbes.yaml") . | sha256sum }}
         {{- if .Values.global.prometheus_enabled }}
         prometheus.io/scrape: 'true'
         prometheus.io/port: '24231'
@@ -71,6 +72,23 @@ spec:
               secretKeyRef:
                 name: {{ template "splunk-kubernetes-logging.secret" . }}
                 key: splunk_hec_token
+        livenessProbe:
+          exec:
+            command:
+            - "/bin/sh"
+            - "-c"
+            - "/fluentd/liveness.sh"
+          {{- if .Values.global.splunk-kubernetes-logging.livenessProbe }}
+          {{ if .Values.global.splunk-kubernetes-logging.livenessProbe.initialDelaySeconds }} {{- (printf "initialDelaySeconds: %d" (int64 .Values.global.splunk-kubernetes-logging.livenessProbe.initialDelaySeconds)) }} {{ else }}initialDelaySeconds: 30 {{end}}
+          {{ if .Values.global.splunk-kubernetes-logging.livenessProbe.periodSeconds }} {{- (printf "periodSeconds: %d" (int64 .Values.global.splunk-kubernetes-logging.livenessProbe.periodSeconds)) }} {{ else }}periodSeconds: 60 {{end}}
+          {{ if .Values.global.splunk-kubernetes-logging.livenessProbe.timeoutSeconds }} {{- (printf "timeoutSeconds: %d" (int64 .Values.global.splunk-kubernetes-logging.livenessProbe.timeoutSeconds)) }} {{ else }}timeoutSeconds: 55 {{end}}
+          {{ if .Values.global.splunk-kubernetes-logging.livenessProbe.failureThreshold }} {{- (printf "failureThreshold: %d" (int64 .Values.global.splunk-kubernetes-logging.livenessProbe.failureThreshold)) }} {{ else }}failureThreshold: 5 {{end}}
+          {{- else }}
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 55
+          failureThreshold: 5
+          {{- end }}
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
@@ -87,6 +105,9 @@ spec:
         - name: secrets
           mountPath: /fluentd/etc/splunk
           readOnly: true
+        - name: configmap-k8Probes
+          mountPath: /fluentd/liveness.sh
+          subPath: liveness.sh
       terminationGracePeriodSeconds: 30
       volumes:
       - name: varlog
@@ -104,6 +125,10 @@ spec:
       - name: secrets
         secret:
           secretName: {{ template "splunk-kubernetes-logging.secret" . }}
+      - name: configmap-k8Probes
+        configMap:
+          name: {{ template "splunk-kubernetes-logging.fullname" . }}-k8sProbes
+          defaultMode: 0755
       {{- if .Values.priorityClassName }}
       priorityClassName: {{ .Values.priorityClassName }}
       {{- end }}

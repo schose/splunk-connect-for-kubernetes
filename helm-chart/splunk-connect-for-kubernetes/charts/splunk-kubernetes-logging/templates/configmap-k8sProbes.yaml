@@ -1,0 +1,32 @@
+{{- if .Values.global.splunk-kubernetes-logging.livenessProbe }}
+  {{ if .Values.global.splunk-kubernetes-logging.livenessProbe.timeoutSeconds }}
+    {{- $livenessProbeTimeoutSeconds := .Values.global.splunk-kubernetes-logging.livenessProbe.timeoutSeconds }}
+  {{- end }}
+{{- else }}
+{{- $livenessProbeTimeoutSeconds := 55 }}
+{{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "splunk-kubernetes-logging.fullname" . }}-k8sProbes
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "splunk-kubernetes-logging.name" . }}
+    chart: {{ template "splunk-kubernetes-logging.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  liveness.sh: |-
+    #!/bin/sh
+
+    if ! curl --max-time {{ $livenessProbeTimeoutSeconds }} --retry 0 http://localhost:9880/ ; then
+      echo 'Fluentd http API not reachable'
+      exit 1
+    fi
+  {{- if .Values.global.monitoring_agent_enabled }}
+    if ! curl --max-time {{ $livenessProbeTimeoutSeconds }} --retry 0 http://localhost:24220/api/plugins.json ; then
+      echo 'Fluentd monitoring API not reachable'
+      exit 1
+    fi
+  {{- end }}
