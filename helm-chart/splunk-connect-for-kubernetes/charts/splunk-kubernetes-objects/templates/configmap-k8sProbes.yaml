@@ -1,6 +1,6 @@
-{{- if .Values.global.splunk-kubernetes-objects.livenessProbe }}
-  {{ if .Values.global.splunk-kubernetes-objects.livenessProbe.timeoutSeconds }}
-    {{- $livenessProbeTimeoutSeconds := .Values.global.splunk-kubernetes-objects.livenessProbe.timeoutSeconds }}
+{{- if index .Values "global" "splunk-kubernetes-objects" "livenessProbe" }}
+  {{ if index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "timeoutSeconds" }}
+    {{- $livenessProbeTimeoutSeconds := index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "timeoutSeconds" }}
   {{- end }}
 {{- else }}
 {{- $livenessProbeTimeoutSeconds := 55 }}
