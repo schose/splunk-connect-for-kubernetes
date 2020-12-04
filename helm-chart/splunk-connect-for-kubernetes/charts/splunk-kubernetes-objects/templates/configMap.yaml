@@ -145,3 +145,13 @@ data:
       </buffer>
       {{- end }}
     </match>
+
+{{- if .Values.global.monitoring_agent_enabled }}
+  monit.conf: |-
+    <source>
+      @id fluentd-monitor-agent
+      @type monitor_agent
+      @label @SPLUNK
+      tag monitor_agent
+    </source>
+{{- end }}
