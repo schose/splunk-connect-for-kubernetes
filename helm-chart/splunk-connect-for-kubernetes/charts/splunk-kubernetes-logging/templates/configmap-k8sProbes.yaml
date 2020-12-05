@@ -1,9 +1,8 @@
-{{- if index .Values "global" "splunk-kubernetes-logging" "livenessProbe" }}
-  {{ if index .Values "global" "splunk-kubernetes-logging" "livenessProbe" "timeoutSeconds" }}
-    {{- $livenessProbeTimeoutSeconds := index .Values "global" "splunk-kubernetes-logging" "livenessProbe" "timeoutSeconds" }}
-  {{- end }}
-{{- else }}
 {{- $livenessProbeTimeoutSeconds := 55 }}
+{{- if .Values.livenessProbe }}
+  {{ if index .Values.livenessProbe.timeoutSeconds }}
+    {{- $livenessProbeTimeoutSeconds = .Values.livenessProbe.timeoutSeconds }}
+  {{- end }}
 {{- end }}
 
 apiVersion: v1

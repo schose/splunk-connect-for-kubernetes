@@ -37,6 +37,13 @@ podSecurityPolicy:
   # b) you want to create Pod Security Policy resources by yourself.
   create: false
 
+# Kubernetes probes config https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  initialDelaySeconds: 30 # wait x seconds before the first check
+  periodSeconds: 60 # check every x seconds
+  timeoutSeconds: 55 # wait x seconds for a response before a single check is failed
+  failureThreshold: 5 # kill the pod after x failed checks
+
 # = Kubernetes Connection Configs =
 kubernetes:
   # the URL for calling kubernetes API, by default it will be read from the environment variables

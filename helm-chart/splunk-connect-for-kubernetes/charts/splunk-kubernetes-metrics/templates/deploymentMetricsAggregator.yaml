@@ -23,6 +23,7 @@ spec:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         checksum/config: {{ include (print $.Template.BasePath "/configMapMetricsAggregator.yaml") . | sha256sum }}
+        checksum/k8sProbes: {{ include (print $.Template.BasePath "/configmap-k8sProbes.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ template "splunk-kubernetes-metrics.serviceAccountName" . }}
       {{- with .Values.nodeSelector }}
@@ -57,6 +58,23 @@ spec:
                 fieldPath: spec.nodeName
           - name: SSL_CERT_FILE
             value: /fluentd/etc/splunk/hec_ca_file
+        livenessProbe:
+          exec:
+            command:
+            - "/bin/sh"
+            - "-c"
+            - "/fluentd/liveness.sh"
+          {{- if .Values.livenessProbe }}
+          {{ if .Values.livenessProbe.initialDelaySeconds }} {{- (printf "initialDelaySeconds: %d" (int64 .Values.livenessProbe.initialDelaySeconds)) }} {{ else }}initialDelaySeconds: 30 {{end}}
+          {{ if .Values.livenessProbe.periodSeconds }} {{- (printf "periodSeconds: %d" (int64 .Values.livenessProbe.periodSeconds)) }} {{ else }}periodSeconds: 60 {{end}}
+          {{ if .Values.livenessProbe.timeoutSeconds }} {{- (printf "timeoutSeconds: %d" (int64 .Values.livenessProbe.timeoutSeconds)) }} {{ else }}timeoutSeconds: 55 {{end}}
+          {{ if .Values.livenessProbe.failureThreshold }} {{- (printf "failureThreshold: %d" (int64 .Values.livenessProbe.failureThreshold)) }} {{ else }}failureThreshold: 5 {{end}}
+          {{- else }}
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 55
+          failureThreshold: 5
+          {{- end }}
         resources:
 {{ toYaml .Values.resources.fluent | indent 12 }}
         volumeMounts:
@@ -65,6 +83,9 @@ spec:
           - name: secrets
             mountPath: /fluentd/etc/splunk
             readOnly: true
+          - name: configmap-k8Probes
+            mountPath: /fluentd/liveness.sh
+            subPath: liveness.sh
       volumes:
       - name: conf-configmap
         configMap:
@@ -72,3 +93,7 @@ spec:
       - name: secrets
         secret:
           secretName: {{ template "splunk-kubernetes-metrics.secret" . }}
+      - name: configmap-k8Probes
+        configMap:
+          name: {{ template "splunk-kubernetes-objects.fullname" . }}-k8sProbes
+          defaultMode: 0755

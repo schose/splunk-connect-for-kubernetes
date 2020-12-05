@@ -49,36 +49,36 @@ spec:
         image: {{ template "splunk-kubernetes-objects.image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
-          - name: MY_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: MY_POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: SPLUNK_HEC_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: {{ template "splunk-kubernetes-objects.secret" . }}
-                key: splunk_hec_token
-          - name: SSL_CERT_FILE
-            value: /fluentd/etc/splunk/hec_ca_file
+        - name: MY_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: SPLUNK_HEC_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "splunk-kubernetes-objects.secret" . }}
+              key: splunk_hec_token
+        - name: SSL_CERT_FILE
+          value: /fluentd/etc/splunk/hec_ca_file
         livenessProbe:
           exec:
             command:
             - "/bin/sh"
             - "-c"
             - "/fluentd/liveness.sh"
-          {{- if index .Values "global" "splunk-kubernetes-objects" "livenessProbe" }}
-          {{ if index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "initialDelaySeconds" }} {{- (printf "initialDelaySeconds: %d" (int64 index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "initialDelaySeconds")) }} {{ else }}initialDelaySeconds: 30 {{end}}
-          {{ if index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "periodSeconds" }} {{- (printf "periodSeconds: %d" (int64 index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "periodSeconds")) }} {{ else }}periodSeconds: 60 {{end}}
-          {{ if index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "timeoutSeconds" }} {{- (printf "timeoutSeconds: %d" (int64 index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "timeoutSeconds")) }} {{ else }}timeoutSeconds: 55 {{end}}
-          {{ if index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "failureThreshold" }} {{- (printf "failureThreshold: %d" (int64 index .Values "global" "splunk-kubernetes-objects" "livenessProbe" "failureThreshold")) }} {{ else }}failureThreshold: 5 {{end}}
+          {{- if .Values.livenessProbe }}
+          {{ if .Values.livenessProbe.initialDelaySeconds }} {{- (printf "initialDelaySeconds: %d" (int64 .Values.livenessProbe.initialDelaySeconds)) }} {{ else }}initialDelaySeconds: 30 {{end}}
+          {{ if .Values.livenessProbe.periodSeconds }} {{- (printf "periodSeconds: %d" (int64 .Values.livenessProbe.periodSeconds)) }} {{ else }}periodSeconds: 60 {{end}}
+          {{ if .Values.livenessProbe.timeoutSeconds }} {{- (printf "timeoutSeconds: %d" (int64 .Values.livenessProbe.timeoutSeconds)) }} {{ else }}timeoutSeconds: 55 {{end}}
+          {{ if .Values.livenessProbe.failureThreshold }} {{- (printf "failureThreshold: %d" (int64 .Values.livenessProbe.failureThreshold)) }} {{ else }}failureThreshold: 5 {{end}}
           {{- else }}
           initialDelaySeconds: 30
           periodSeconds: 60
@@ -107,11 +107,12 @@ spec:
       - name: secrets
         secret:
           secretName: {{ template "splunk-kubernetes-objects.secret" . }}
-      {{- if .Values.checkpointFile.volume }}
-      - name: checkpoints
-{{ toYaml .Values.checkpointFile.volume | indent 8 }}
-      {{- end -}}
       - name: configmap-k8Probes
         configMap:
           name: {{ template "splunk-kubernetes-objects.fullname" . }}-k8sProbes
           defaultMode: 0755
+      {{- if .Values.checkpointFile.volume }}
+      - name: checkpoints
+{{ toYaml .Values.checkpointFile.volume | indent 8 }}
+      {{- end -}}
+      
