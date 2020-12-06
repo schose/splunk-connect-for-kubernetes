@@ -23,7 +23,9 @@ data:
   liveness.sh: |-
     #!/bin/sh
 
+{{- if .Values.global.monitoring_agent_enabled }}
     if ! curl --max-time {{ $livenessProbeTimeoutSeconds }} --retry 0 http://localhost:24220/api/plugins.json ; then
       echo 'Fluentd monitoring API not usable'
       exit 1
     fi
+{{- end }}
