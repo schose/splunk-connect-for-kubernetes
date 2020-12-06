@@ -23,6 +23,33 @@ data:
   liveness.sh: |-
     #!/bin/sh
 
+{{/* 
+- Fluentd using the "Fluentd Plugin for Kubernetes Metrics" plugin can become stuck if the k8s api connection was interupted.
+- This check searches the related pod log entry and than k8s will kill the pod and create a new one as workaround.
+- https://github.com/splunk/fluent-plugin-k8s-metrics-agg/issues/46
+- This check will only be enabled if the sub-chart option is enabled or (commented out and and the global option is enabled)
+*/}}
+{{- $scrapeLogForError := false }}
+{{- if .Values.serviceAccount.automountServiceAccountToken }}
+  {{- if eq .Values.serviceAccount.automountServiceAccountToken "enabled" }}
+    {{- $scrapeLogForError = true }}
+  {{- end -}}
+{{ else if .Values.global.kubernetes.automountServiceAccountToken }}
+  {{- if eq .Values.global.kubernetes.automountServiceAccountToken "enabled" }}
+    {{- $scrapeLogForError = true }}
+  {{- end -}}
+{{- end -}}
+{{- if $scrapeLogForError }}
+    K8S_SERVICE_ACCOUNT_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    K8S_CA_CRT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    K8S_MY_POD_URL=https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/${MY_NAMESPACE}/pods/${MY_POD_NAME}/log
+
+    if curl --max-time {{ $livenessProbeTimeoutSeconds }} --retry 0 --header "Authorization: Bearer ${K8S_SERVICE_ACCOUNT_TOKEN}" --cacert ${K8S_CA_CRT} ${K8S_MY_POD_URL} | grep 'Failed to scrape resource usage metrics' ; then
+    echo 'Fluentd K8s metrics scraping broken https://github.com/splunk/fluent-plugin-k8s-metrics-agg/issues/46'
+      exit 1
+    fi
+{{ end }}
+
 {{- if .Values.global.monitoring_agent_enabled }}
     if ! curl --max-time {{ $livenessProbeTimeoutSeconds }} --retry 0 http://localhost:24220/api/plugins.json ; then
       echo 'Fluentd monitoring API not usable'

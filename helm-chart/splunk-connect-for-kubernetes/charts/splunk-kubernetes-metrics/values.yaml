@@ -31,7 +31,7 @@ serviceAccount:
   # - use token created by Kubernetes for the service account and automatically mount it
   # - sub-chart value .Values.serviceAccount.automountServiceAccountToken overwrites global values
   # - global and sub-chart values can be commented out. If undefined autoMount will be disabled
-  #automountServiceAccountToken: "enabled"
+  automountServiceAccountToken: "enabled"
 
 
 podSecurityPolicy:

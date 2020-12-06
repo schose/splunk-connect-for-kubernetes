@@ -26,7 +26,7 @@ data:
 - Fluentd using the "Fluentd Plugin for Kubernetes Metrics" plugin can become stuck if the k8s api connection was interupted.
 - This check searches the related pod log entry and than k8s will kill the pod and create a new one as workaround.
 - https://github.com/splunk/fluent-plugin-k8s-metrics-agg/issues/46
-- This check will only be enabled
+- This check will only be enabled if the sub-chart option is enabled or (commented out and and the global option is enabled)
 */}}
 {{- $scrapeLogForError := false }}
 {{- if .Values.serviceAccount.automountServiceAccountToken }}
