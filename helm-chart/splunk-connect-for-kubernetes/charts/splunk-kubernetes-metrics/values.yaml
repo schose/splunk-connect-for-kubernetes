@@ -27,6 +27,11 @@ serviceAccount:
   # This flag specifies if the user wants to use a secret for creating the serviceAccount,
   # which will be used to get the images from a private registry
   usePullSecrets: false
+  # https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
+  # use token created by Kubernetes for the service account and automatically mount it
+  # overwrites the global.kubernetes.automountServiceAccountToken
+  automountServiceAccountToken: true
+
 
 podSecurityPolicy:
   # Specifies whether Pod Security Policy resources should be created.

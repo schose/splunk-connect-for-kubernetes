@@ -41,6 +41,10 @@ global:
     clusterName: "cluster_name"
     # Add privileged access to containers for openshift compatibility
     openshift: false
+    # https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
+    # use token created by Kubernetes for the service account and automatically mount it
+    # You have to comment out the sub-chart .Values.serviceAccount.automountServiceAccountToken property to be able to use the global setting in a sub-chart
+    automountServiceAccountToken: false 
   prometheus_enabled:
   monitoring_agent_enabled: true # also used for the liveness checks
   
