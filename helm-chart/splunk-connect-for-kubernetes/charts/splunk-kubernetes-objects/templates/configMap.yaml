@@ -23,6 +23,9 @@ data:
     <system>
       log_level {{ or .Values.logLevel .Values.global.logLevel }}
     </system>
+    {{- if .Values.global.monitoring_agent_enabled }}
+    @include monit.conf
+    {{- end }}
 
     {{- range $apiGroup, $apiVersions := .Values.objects }}
     {{- range $apiVersion, $objects := $apiVersions }}

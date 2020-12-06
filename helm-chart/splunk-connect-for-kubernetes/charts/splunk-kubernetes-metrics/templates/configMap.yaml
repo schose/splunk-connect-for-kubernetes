@@ -24,6 +24,9 @@ data:
     <system>
       log_level {{ or .Values.logLevel .Values.global.logLevel | default "info" }}
     </system>
+    {{- if .Values.global.monitoring_agent_enabled }}
+    @include monit.conf
+    {{- end }}
     <source>
       @type kubernetes_metrics
       tag kube.*
