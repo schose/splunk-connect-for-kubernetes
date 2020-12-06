@@ -28,6 +28,13 @@ serviceAccount:
   # which will be used to get the images from a private registry
   usePullSecrets: false
 
+podSecurityPolicy:
+  # Specifies whether Pod Security Policy resources should be created.
+  # This should be set to `false` if either:
+  # a) Pod Security Policies is not enabled in the cluster, or
+  # b) you want to create Pod Security Policy resources by yourself.
+  create: false
+
 # Kubernetes probes config https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   initialDelaySeconds: 30 # wait x seconds before the first check
@@ -35,12 +42,6 @@ livenessProbe:
   timeoutSeconds: 55 # wait x seconds for a response before a single check is failed
   failureThreshold: 5 # kill the pod after x failed checks
 
-podSecurityPolicy:
-  # Specifies whether Pod Security Policy resources should be created.
-  # This should be set to `false` if either:
-  # a) Pod Security Policies is not enabled in the cluster, or
-  # b) you want to create Pod Security Policy resources by yourself.
-  create: false
 
 # = Splunk HEC Connection =
 splunk:
@@ -247,3 +248,4 @@ global:
     clusterName: "cluster_name"
   prometheus_enabled: true
   monitoring_agent_enabled: true
+  

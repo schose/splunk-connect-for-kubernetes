@@ -42,7 +42,14 @@ global:
     # Add privileged access to containers for openshift compatibility
     openshift: false
   prometheus_enabled:
-  monitoring_agent_enabled:
+  monitoring_agent_enabled: true # also used for the liveness checks
+  
+  # Kubernetes probes config https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  livenessProbe:
+    initialDelaySeconds: 30 # wait x seconds before the first check
+    periodSeconds: 60 # check every x seconds
+    timeoutSeconds: 55 # wait x seconds for a response before a single check is failed
+    failureThreshold: 5 # kill the pod after x failed checks
 
 ## Enabling splunk-kubernetes-logging will install the `splunk-kubernetes-logging` chart to a kubernetes
 ## cluster to collect logs generated in the cluster to a Splunk indexer/indexer cluster.

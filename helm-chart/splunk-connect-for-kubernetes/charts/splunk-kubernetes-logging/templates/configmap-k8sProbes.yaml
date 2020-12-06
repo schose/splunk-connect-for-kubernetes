@@ -1,7 +1,11 @@
 {{- $livenessProbeTimeoutSeconds := 55 }}
 {{- if .Values.livenessProbe }}
-  {{ if index .Values.livenessProbe.timeoutSeconds }}
+  {{ if .Values.livenessProbe.timeoutSeconds }}
     {{- $livenessProbeTimeoutSeconds = .Values.livenessProbe.timeoutSeconds }}
+  {{- end }}
+{{- else if .Values.global.livenessProbe }}
+  {{ if .Values.global.livenessProbe.timeoutSeconds }}
+    {{- $livenessProbeTimeoutSeconds = .Values.global.livenessProbe.timeoutSeconds }}
   {{- end }}
 {{- end }}
 
@@ -19,13 +23,7 @@ data:
   liveness.sh: |-
     #!/bin/sh
 
-    if ! curl --max-time {{ $livenessProbeTimeoutSeconds }} --retry 0 http://localhost:9880/ ; then
-      echo 'Fluentd http API not reachable'
-      exit 1
-    fi
-  {{- if .Values.global.monitoring_agent_enabled }}
     if ! curl --max-time {{ $livenessProbeTimeoutSeconds }} --retry 0 http://localhost:24220/api/plugins.json ; then
       echo 'Fluentd monitoring API not usable'
       exit 1
     fi
-  {{- end }}
