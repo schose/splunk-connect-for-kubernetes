@@ -1,3 +1,14 @@
+{{- $ServiceAccountTokenIsAutomounted := false }}
+{{- if .Values.serviceAccount.automountServiceAccountToken }}
+  {{- if eq .Values.serviceAccount.automountServiceAccountToken "enabled" }}
+    {{- $ServiceAccountTokenIsAutomounted = true }}
+  {{- end }}
+{{ else if .Values.global.kubernetes.automountServiceAccountToken }}
+  {{- if eq .Values.global.kubernetes.automountServiceAccountToken "enabled" }}
+    {{- $ServiceAccountTokenIsAutomounted = true }}
+  {{- end }}
+{{- end }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -27,14 +38,18 @@ data:
       {{- with .Values.kubernetes.insecureSSL }}
       insecure_ssl {{ . }}
       {{- end }}
-      {{- if .Values.kubernetes.caFile }}
+      {{- if $ServiceAccountTokenIsAutomounted }}
+      ca_file /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file token
+      secret_dir /var/run/secrets/kubernetes.io/serviceaccount
+      {{- else if .Values.kubernetes.caFile }}
       ca_file /fluentd/etc/splunk/k8s_ca_file
-      {{- end }}
       {{- with .Values.kubernetes.bearerTokenFile }}
       bearer_token_file {{ . }}
       {{- end }}
       {{- with .Values.kubernetes.secretDir }}
       secret_dir {{ . }}
+      {{- end }}
       {{- end }}
       {{- with or .Values.kubernetes.clusterName .Values.global.kubernetes.clusterName }}
       cluster_name {{ . }}

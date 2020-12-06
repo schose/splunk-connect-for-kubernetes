@@ -45,7 +45,7 @@ global:
     # - use token created by Kubernetes for the service account and automatically mount it
     # - sub-chart value .Values.serviceAccount.automountServiceAccountToken overwrites global values
     # - global and sub-chart values can be commented out. If undefined autoMount will be disabled
-    automountServiceAccountToken: "false"
+    automountServiceAccountToken: "enabled"
   prometheus_enabled:
   monitoring_agent_enabled: true # also used for the liveness checks
   
@@ -508,10 +508,16 @@ splunk-kubernetes-objects:
     # Path to the private key file for this client.
     clientKey:
     # Path to the CA file.
+    # If automountServiceAccountToken is enabled globally or in a sub-chart the default Kubernetes paths will be used
+    # https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
     caFile:
     # Path to the file contains the API token. By default it reads from the file "token" in the `secret_dir`.
+    # If automountServiceAccountToken is enabled globally or in a sub-chart the default Kubernetes paths will be used
+    # https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
     bearerTokenFile:
     # Path of the location where pod's service account's credentials are stored. Usually you don't need to care about this config, the default value should work in most cases.
+    # If automountServiceAccountToken is enabled globally or in a sub-chart the default Kubernetes paths will be used
+    # https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
     secretDir:
     # The cluster name used to tag cluster metrics from the aggregator. Default is cluster_name
     clusterName:
