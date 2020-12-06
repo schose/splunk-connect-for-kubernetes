@@ -28,8 +28,17 @@ data:
 - https://github.com/splunk/fluent-plugin-k8s-metrics-agg/issues/46
 - This check will only be enabled
 */}}
+{{- $scrapeLogForError := false }}
 {{- if .Values.serviceAccount.automountServiceAccountToken }}
   {{- if eq .Values.serviceAccount.automountServiceAccountToken "enabled" }}
+    {{- $scrapeLogForError = true }}
+  {{- end -}}
+{{ else if .Values.global.kubernetes.automountServiceAccountToken }}
+  {{- if eq .Values.global.kubernetes.automountServiceAccountToken "enabled" }}
+    {{- $scrapeLogForError = true }}
+  {{- end -}}
+{{- end -}}
+{{- if $scrapeLogForError }}
     K8S_SERVICE_ACCOUNT_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
     K8S_CA_CRT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
     K8S_MY_POD_URL=https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_PORT_443_TCP_PORT/api/v1/namespaces/${MY_NAMESPACE}/pods/${MY_POD_NAME}/log
@@ -38,7 +47,6 @@ data:
     echo 'Fluentd K8s metrics scraping broken https://github.com/splunk/fluent-plugin-k8s-metrics-agg/issues/46'
       exit 1
     fi
-  {{- end -}} 
 {{ end }}
 
     if ! curl --max-time {{ $livenessProbeTimeoutSeconds }} --retry 0 http://localhost:24220/api/plugins.json ; then
