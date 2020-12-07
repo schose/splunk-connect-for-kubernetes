@@ -68,7 +68,6 @@ spec:
               key: splunk_hec_token
         - name: SSL_CERT_FILE
           value: /fluentd/etc/splunk/hec_ca_file
-        {{- if .Values.global.monitoring_agent_enabled }}
         livenessProbe:
           exec:
             command:
@@ -91,7 +90,6 @@ spec:
           timeoutSeconds: 55
           failureThreshold: 5
           {{- end }}
-        {{- end }}
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         volumeMounts:
